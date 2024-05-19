@@ -28,5 +28,5 @@ class Logger:
         Logger.logger.logger.debug(message)
 
     @staticmethod
-    def error(self, message):
+    def error(message):
         Logger.logger.logger.error(message)

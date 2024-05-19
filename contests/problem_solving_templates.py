@@ -32,11 +32,12 @@ class ProblemSolvingTemplates(ProblemTemplates):
         provide the score as a value in range between 0.0 and 1.0. The output should be just json document, with
         map containing each criteria and the score value. Use following keys for the response map: 'accuracy', 
         'clarity', 'depth', 'reasoning'. Do not use any formatting in the output. Just pure JSON document. 
-        Do not output any additional comments regarding the answer. 
+        Do not output any additional comments regarding the answer.         
+        Example of an output: {{"accuracy": 0.9, "clarity": 0.9, "depth": 0.85, "reasoning": 0.9}}  
 
         Problem: {problem}
 
-        Answer to evaluate: {answer}
+        Problem answer to evaluate: {answer}
         """)
     ])
 
