@@ -24,7 +24,7 @@ class Arena:
         self.model_name_to_index = {get_model_name(llm): n for n, llm in enumerate(self.llms)}
         self.competition_scores = CompetitionScores(len(llms))
         self.n_jobs = n_jobs
-        self.sync_models = set('mixtral-8x7b-32768')
+        self.sync_models = {'mixtral-8x7b-32768'}
 
     def run(self, n_rounds=1):
         n_llms = len(self.llms)
@@ -58,8 +58,8 @@ class Arena:
                                               (task, student, master, self.competition_templates))
                     futures.append(feature)
                     # wait for some models with low TPM limits
-                    if self.__sync_call(master, student):
-                        concurrent.futures.wait(feature)
+                    # if self.__sync_call(master, student):
+                    #     concurrent.futures.wait([feature])
                 self.logger.info('Waiting for results...')
                 concurrent.futures.wait(futures)
                 self.logger.info(f'Round done. Time: {now()-round_start_time:.1f} sec')
@@ -146,7 +146,7 @@ class Arena:
             var_dict = {}
         task_selection_chain = template | chat
         st = now()
-        response = task_selection_chain.invoke(var_dict)
+        response = Arena.__invoke_with_retry(task_selection_chain, var_dict)
         time = now() - st
         result = response.content
         if log_result:
@@ -154,12 +154,17 @@ class Arena:
         return result
 
     @staticmethod
-    @retry(stop=stop_after_attempt(10), wait=wait_exponential(min=1, max=32),
+    @retry(stop=stop_after_attempt(20), wait=wait_exponential(min=1, max=32),
            retry=retry_if_exception_type(RateLimitException))
     def __invoke_with_retry(chain, dicts):
         try:
             response = chain.invoke(dicts)
             return response
         except BaseException as ex:
-            if 'Error code: 429' in str(ex):
+            message = str(ex)
+            if 'Error code: 429' in message:
+                Logger.debug(f'Rate limit error: {message}')
+                raise RateLimitException()
+            if 'rate_limit_error' in message:
+                Logger.debug(f'Rate limit error: {message}')
                 raise RateLimitException()
