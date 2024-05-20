@@ -3,13 +3,13 @@ from abc import abstractmethod
 from langchain_core.prompts import ChatPromptTemplate
 
 
-class ProblemTemplates:
+class CompetitionTemplates:
     @abstractmethod
     def get_templates_set_name(self) -> str:
         pass
 
     @abstractmethod
-    def get_problem_selection_template(self) -> ChatPromptTemplate:
+    def get_task_selection_template(self) -> ChatPromptTemplate:
         pass
 
     @abstractmethod

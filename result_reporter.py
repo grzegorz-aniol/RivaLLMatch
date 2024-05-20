@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -36,11 +39,12 @@ class ChartReporter:
 
     def generate_overall_results(self, title, metric_name, file_name, values):
         plt.figure(figsize=(self.fig_width, 6))
-        bar_plot = sns.barplot(x=self.model_names, y=values, hue=values, palette='viridis', legend=False)
+        bar_plot = sns.barplot(x=self.model_names, y=values, hue=values, legend=False,
+                               palette=sns.color_palette(n_colors=len(self.model_names)))
         bar_plot.set_title(title, fontdict=self.title_style)
         bar_plot.set_xlabel('Models', fontdict=self.axis_style)
         bar_plot.set_ylabel(metric_name, fontdict=self.axis_style)
         for index, value in enumerate(values):
-            bar_plot.text(index, value + 0.01, '{value:.3f}', color='black', ha="center")
+            bar_plot.text(index, value + 0.01, f'{value:.3f}', color='black', ha="center")
         plt.savefig(file_name)
         plt.close()

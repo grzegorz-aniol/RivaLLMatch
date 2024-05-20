@@ -1,14 +1,14 @@
 from langchain_core.prompts import ChatPromptTemplate
 
-from contests.problem_templates import ProblemTemplates
+from contests.competition_templates import CompetitionTemplates
 
 
-class ProblemSolvingTemplates(ProblemTemplates):
+class TaskSolvingTemplates(CompetitionTemplates):
     """
         Set of prompt templates for problem-solving competition
     """
 
-    problem_selection_template = ChatPromptTemplate.from_messages([
+    task_selection_template = ChatPromptTemplate.from_messages([
         ('user',
          """Find a question that may be asked to another persona, in order to evaluates his problem-solving skills.
          The problem or question should be complex and will require a detailed explanation or solution. The response 
@@ -21,7 +21,7 @@ class ProblemSolvingTemplates(ProblemTemplates):
         You should provide a comprehensive solution/answer to the problem. Your answer will be later evaluated and
          scored by someone else. The answer should contain just the solution, do not provide any introduction.
 
-         Problem: {problem}
+         Problem: {task}
          """)
     ])
 
@@ -35,7 +35,7 @@ class ProblemSolvingTemplates(ProblemTemplates):
         Do not output any additional comments regarding the answer.         
         Example of an output: {{"accuracy": 0.9, "clarity": 0.9, "depth": 0.85, "reasoning": 0.9}}  
 
-        Problem: {problem}
+        Problem: {task}
 
         Problem answer to evaluate: {answer}
         """)
@@ -44,11 +44,11 @@ class ProblemSolvingTemplates(ProblemTemplates):
     def get_templates_set_name(self) -> str:
         return 'Problem Solving'
 
-    def get_problem_selection_template(self) -> ChatPromptTemplate:
-        return ProblemSolvingTemplates.problem_selection_template
+    def get_task_selection_template(self) -> ChatPromptTemplate:
+        return TaskSolvingTemplates.task_selection_template
 
     def get_question_template(self) -> ChatPromptTemplate:
-        return ProblemSolvingTemplates.problem_question_template
+        return TaskSolvingTemplates.problem_question_template
 
     def get_answer_evaluation(self) -> ChatPromptTemplate:
-        return ProblemSolvingTemplates.answer_evaluation_template
+        return TaskSolvingTemplates.answer_evaluation_template
