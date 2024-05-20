@@ -16,12 +16,14 @@ if __name__ == '__main__':
         models.get_claude_llm(),
         models.get_llama3(),
         models.get_mixtral(),
-        models.get_gemini_llm(),
+        models.get_gemini_llm(model='models/gemini-1.0-pro-latest'),
+        # models.get_gemini_llm(model='models/gemini-1.5-pro-latest'),
     ]
     model_names = [models.get_model_name(llm) for llm in llms]
+    n_llms = len(llms)
 
-    arena = Arena(TaskSolvingTemplates(), llms, n_jobs=6)
-    competition_scores = arena.run() # n_rounds=len(llms)
+    arena = Arena(TaskSolvingTemplates(), llms, n_jobs=n_llms)
+    competition_scores = arena.run(n_rounds=n_llms)
 
     reporter = ChartReporter('problem_solving', model_names, competition_scores)
     reporter.generate_reports()

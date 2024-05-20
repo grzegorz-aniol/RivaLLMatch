@@ -38,8 +38,11 @@ class CompetitionScores:
         self.reasoning[master_model_index][student_model_index] += score.reasoning
         self.count[master_model_index][student_model_index] += 1
 
-    def get_results(self):
-        return {'accuracy': self.accuracy, 'clarity': self.clarity, 'depth': self.depth, 'reasoning': self.reasoning}
+    def get_all_avg_results(self):
+        count = self.count.copy()
+        count[count == 0.0] = 1.0
+        return {'accuracy': self.accuracy / count, 'clarity': self.clarity / count,
+                'depth': self.depth / count, 'reasoning': self.reasoning / count}
 
     def get_student_avg_score(self):
         return self.__get_avg_score(axis=0)
