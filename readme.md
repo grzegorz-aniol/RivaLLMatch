@@ -2,10 +2,12 @@
 
 **RivaLLMatch** is an application that manages an arena in which different language models compete with each other. The basic concept is that models themselves evaluate each other.
 
+![](./images/rivallmatch-header.png)
+
 The competition takes place in one of the following areas:
 
-* problem-solving (implemented)
-* creative writing (tbd)
+* problem-solving
+* creative writing
 * debate and persuasion (tbd)
 
 ## How it works
@@ -25,11 +27,18 @@ Models select the problems or tasks they will solve in each round. Models are qu
 In each round, models are paired for competition. Each pair consists of a 'master' (who evaluates) and a 'student' (who provides the answer). For example, if n_llms=3, there are 6 possible pairs.
 
 ### Master-student clash
-The 'student' model answers a task from the round, and the 'master' model evaluates the response based on the following criteria:
+The 'student' model answers a task from the round, and the 'master' model evaluates the response based on the several criteria.
+
+For problem-solving we consider following scores: 
 * accuracy
 * clarity
 * depth of explanation
 * reasoning
+
+For creative writing we use such scores:
+* creativity
+* emotional depth
+* narrative flow
 
 ### Next round
 
@@ -85,7 +94,7 @@ the new project.
 ![](./results/problem_solving_clarity.png)
 ![](./results/problem_solving_clarity_heatmap.png)
 
-### Depth of explenation
+### Depth of explanation
 ![](./results/problem_solving_depth.png)
 ![](./results/problem_solving_depth_heatmap.png)
 
@@ -93,4 +102,21 @@ the new project.
 ![](./results/problem_solving_reasoning.png)
 ![](./results/problem_solving_reasoning_heatmap.png)
 
+
+## Creative writing results
+
+### Overall scores
+![](./results/creative_writing_average.png)
+
+### Creativity
+![](./results/creative_writing_creativity.png)
+![](./results/creative_writing_creativity_heatmap.png)
+
+### Emotional depth
+![](./results/creative_writing_depth.png)
+![](./results/creative_writing_depth_heatmap.png)
+
+### Narrative flow
+![](./results/creative_writing_flow.png)
+![](./results/creative_writing_flow_heatmap.png)
 
