@@ -1,6 +1,8 @@
 import concurrent.futures
 
 from itertools import permutations
+from typing import Dict
+
 from logger import Logger
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -20,11 +22,12 @@ class Arena:
     def __init__(self, competition_templates: CompetitionTemplates, llms, n_jobs=1):
         self.llms = list(llms)
         self.competition_templates = competition_templates
+        self.competition_id = competition_templates.get_templates_set_id()
+        self.metric_keys = competition_templates.get_metric_keys()
         self.model_names = [get_model_name(llm) for llm in self.llms]
         self.model_name_to_index = {get_model_name(llm): n for n, llm in enumerate(self.llms)}
-        self.competition_scores = CompetitionScores(len(llms))
+        self.competition_scores = CompetitionScores(len(llms), self.metric_keys)
         self.n_jobs = n_jobs
-        self.sync_models = {'mixtral-8x7b-32768'}
 
     def run(self, n_rounds=1):
         n_llms = len(self.llms)
@@ -57,13 +60,12 @@ class Arena:
                     feature = executor.submit(lambda args: self.__dispatch_clash(*args),
                                               (task, student, master, self.competition_templates))
                     futures.append(feature)
-                    # wait for some models with low TPM limits
-                    # if self.__sync_call(master, student):
-                    #     concurrent.futures.wait([feature])
                 self.logger.info('Waiting for results...')
                 concurrent.futures.wait(futures)
                 self.logger.info(f'Round done. Time: {now()-round_start_time:.1f} sec')
                 executor.shutdown()
+
+        self.competition_scores.dump(f'./results/{self.competition_id}_scores.pkl')
 
         total_time = now() - start_time
 
@@ -90,11 +92,6 @@ class Arena:
             self.logger.error(ex)
             return None
 
-    def __sync_call(self, master, student):
-        if get_model_name(student) in self.sync_models or get_model_name(master) in self.sync_models:
-            return True
-        return False
-
     def show_results(self):
         n_llms = len(self.llms)
         self.logger.info('Final results:')
@@ -120,11 +117,8 @@ class Arena:
                 self.logger.info(f"Model: {model_name} - no score")
 
     @staticmethod
-    def __score_to_str(score: Score) -> str:
-        return (f"accuracy={score.accuracy:.3f}, "
-                f"clarity={score.clarity:.3f}, "
-                f"depth={score.depth:.3f}, "
-                f"reasoning={score.reasoning:.3f}")
+    def __score_to_str(score: Dict[str, float]) -> str:
+        return ','.join([f'{key}={value:.3f}' for key, value in score.items()])
 
     def __build_tasks(self, n_tasks):
         self.logger.info('Generate list of tasks')
@@ -168,3 +162,4 @@ class Arena:
             if 'rate_limit_error' in message:
                 Logger.debug(f'Rate limit error: {message}')
                 raise RateLimitException()
+            Logger.error(message)

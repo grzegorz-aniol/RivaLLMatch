@@ -24,7 +24,7 @@ class ChartReporter:
         n_metrics = len(metric_keys)
         overall_scores = np.zeros((n_metrics, n_models))
         for i, key in enumerate(metric_keys):
-            scores = [score.__getattribute__(key) for score in student_scores]
+            scores = [score[key] for score in student_scores]
             overall_scores[i] = scores
             self.generate_overall_results(f'{self.competition_id} / {key}', key,
                                           f'results/{self.competition_id}_{key}.png', scores)
@@ -41,7 +41,7 @@ class ChartReporter:
         heatmap.set_title(title, fontdict=self.title_style)
         heatmap.set_xlabel('students', fontdict=self.axis_style)
         heatmap.set_ylabel('masters', fontdict=self.axis_style)
-        plt.subplots_adjust(wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.2, bottom=0.2)
         plt.savefig(file_name)
         plt.close()
 
@@ -54,6 +54,8 @@ class ChartReporter:
         bar_plot.set_ylabel(metric_name, fontdict=self.axis_style)
         for index, value in enumerate(values):
             bar_plot.text(index, value + 0.01, f'{value:.3f}', color='black', ha="center")
-        plt.subplots_adjust(wspace=0.2, hspace=0.2)
+        plt.subplots_adjust(left=0.2, bottom=0.2)
+        bar_plot.set_ylim(bottom=min(0.5, min(values)))
+
         plt.savefig(file_name)
         plt.close()
