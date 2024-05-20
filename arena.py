@@ -2,11 +2,16 @@ import concurrent.futures
 
 from itertools import permutations
 from logger import Logger
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from contests.competition_templates import CompetitionTemplates
 from models import get_model_name
 from score import parse_score, Score, CompetitionScores
 from utils import now, wrap
+
+
+class RateLimitException(Exception):
+    pass
 
 
 class Arena:
@@ -19,6 +24,7 @@ class Arena:
         self.model_name_to_index = {get_model_name(llm): n for n, llm in enumerate(self.llms)}
         self.competition_scores = CompetitionScores(len(llms))
         self.n_jobs = n_jobs
+        self.sync_models = set('mixtral-8x7b-32768')
 
     def run(self, n_rounds=1):
         n_llms = len(self.llms)
@@ -51,6 +57,9 @@ class Arena:
                     feature = executor.submit(lambda args: self.__dispatch_clash(*args),
                                               (task, student, master, self.competition_templates))
                     futures.append(feature)
+                    # wait for some models with low TPM limits
+                    if self.__sync_call(master, student):
+                        concurrent.futures.wait(feature)
                 self.logger.info('Waiting for results...')
                 concurrent.futures.wait(futures)
                 self.logger.info(f'Round done. Time: {now()-round_start_time:.1f} sec')
@@ -70,7 +79,7 @@ class Arena:
             scores_json = self.invoke_chat('Scores', chat=master,
                                            template=template.get_answer_evaluation(),
                                            var_dict={'task': task, 'answer': answer}, log_result=False)
-            scores = parse_score(clean_json_result(scores_json))
+            scores = parse_score(scores_json)
             master_index = self.model_name_to_index[get_model_name(master)]
             student_index = self.model_name_to_index[get_model_name(student)]
             self.logger.info(f'Clash between {get_model_name(master)} (master) '
@@ -80,6 +89,11 @@ class Arena:
         except BaseException as ex:
             self.logger.error(ex)
             return None
+
+    def __sync_call(self, master, student):
+        if get_model_name(student) in self.sync_models or get_model_name(master) in self.sync_models:
+            return True
+        return False
 
     def show_results(self):
         n_llms = len(self.llms)
@@ -139,10 +153,13 @@ class Arena:
             Arena.logger.debug(f'{name}: {wrap(result)}\nTime: {time:.1f} sec')
         return result
 
-
-def clean_json_result(json_like):
-    if json_like[0] == '{':
-        return json_like
-    i1 = json_like.find('{')
-    i2 = json_like.rfind('}')
-    return json_like[i1:i2 + 1]
+    @staticmethod
+    @retry(stop=stop_after_attempt(10), wait=wait_exponential(min=1, max=32),
+           retry=retry_if_exception_type(RateLimitException))
+    def __invoke_with_retry(chain, dicts):
+        try:
+            response = chain.invoke(dicts)
+            return response
+        except BaseException as ex:
+            if 'Error code: 429' in str(ex):
+                raise RateLimitException()

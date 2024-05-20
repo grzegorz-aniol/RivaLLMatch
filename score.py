@@ -1,8 +1,9 @@
 from typing import Optional
-
 from pydantic import BaseModel
 
 import numpy as np
+
+from logger import Logger
 
 
 class Score(BaseModel):
@@ -62,29 +63,21 @@ class CompetitionScores:
                                     reasoning=avg_reasoning[n]))
         return avg_scores
 
-    @staticmethod
-    def __mean_excluding_diagonal(arr, axis=0) -> np.array:
-        if axis not in [0, 1]:
-            raise ValueError("Axis must be 0 (columns) or 1 (rows)")
 
-        # Create a mask to exclude diagonal elements
-        mask = np.eye(arr.shape[0], dtype=bool)
-
-        if axis == 0:
-            # For column-wise mean
-            means = []
-            for i in range(arr.shape[1]):
-                col_without_diag = arr[:, i][~mask[:, i]]
-                means.append(np.mean(col_without_diag))
-            return np.array(means)
-        else:
-            # For row-wise mean
-            means = []
-            for i in range(arr.shape[0]):
-                row_without_diag = arr[i, :][~mask[i, :]]
-                means.append(np.mean(row_without_diag))
-            return np.array(means)
+def clean_json_result(json_like):
+    i1 = json_like.find('{')
+    if i1 < 0:
+        raise Exception('Cannot find json')
+    i2 = json_like.find('}', i1+1)
+    if i2 < 0:
+        raise Exception('Cannot find json')
+    return json_like[i1:i2 + 1]
 
 
 def parse_score(raw_json):
-    return Score.parse_raw(raw_json)
+    raw_json = clean_json_result(raw_json)
+    try:
+        return Score.parse_raw(raw_json)
+    except BaseException:
+        Logger.logger.error('Wrong json response:' + raw_json)
+    return None
