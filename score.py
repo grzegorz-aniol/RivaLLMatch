@@ -68,6 +68,6 @@ def parse_score(raw_json):
     raw_json = clean_json_result(raw_json)
     try:
         return json.loads(raw_json)
-    except BaseException:
+    except ValueError:
         Logger.logger.error('Wrong json score:' + raw_json)
     return None

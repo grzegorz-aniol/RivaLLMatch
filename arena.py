@@ -1,4 +1,5 @@
 import concurrent.futures
+import random
 
 from itertools import permutations
 from typing import Dict
@@ -12,14 +13,14 @@ from score import parse_score, Score, CompetitionScores
 from utils import now, wrap
 
 
-class RateLimitException(Exception):
+class RetryRequestException(Exception):
     pass
 
 
 class Arena:
     logger = Logger()
 
-    def __init__(self, competition_templates: CompetitionTemplates, llms, n_jobs=1):
+    def __init__(self, competition_templates: CompetitionTemplates, llms):
         self.llms = list(llms)
         self.competition_templates = competition_templates
         self.competition_id = competition_templates.get_templates_set_id()
@@ -27,17 +28,26 @@ class Arena:
         self.model_names = [get_model_name(llm) for llm in self.llms]
         self.model_name_to_index = {get_model_name(llm): n for n, llm in enumerate(self.llms)}
         self.competition_scores = CompetitionScores(len(llms), self.metric_keys)
-        self.n_jobs = n_jobs
 
-    def run(self, n_rounds=1):
+    def run(self, n_rounds=1, n_jobs=1, n_random_pairs=None) -> CompetitionScores:
+        """
+        Run competition
+        :param n_rounds: Number of rounds. Each round uses one task to solve
+        :param n_jobs: Number of threads that may be used for calls to models in order to speed up the run. Default is 1.
+        Optimally, you may want to select same value as a number of models in the competition.
+        :param n_random_pairs: If specified, then provided number of random pairs is used to compete in a round.
+        Otherwise, all combinations of pairs master-student is used. Default value is None.
+        :return: CompetitionScores object with all results from the run
+        """
         n_llms = len(self.llms)
         if n_llms < 2:
             raise Exception('Too small number of LLMs. At least two should be provided to start a competition.')
-        pairs = list(permutations(self.llms, 2))
+        all_pairs = list(permutations(self.llms, 2))
+        n_pairs_in_round = n_random_pairs if n_random_pairs else len(all_pairs)
 
         self.logger.info(f'Starting competition: {self.competition_templates.get_templates_set_name()}')
         self.logger.info(f'Number of rounds: {n_rounds}')
-        self.logger.info(f'Number of clashes: {n_rounds * len(pairs)}')
+        self.logger.info(f'Number of clashes: {n_rounds * n_pairs_in_round} ({n_pairs_in_round} in each round)')
         self.logger.info(f'Models under evaluation: {self.model_names}')
         self.logger.info('')
 
@@ -50,12 +60,13 @@ class Arena:
         for n in range(n_rounds):
             self.logger.info('-------------------------------------------------------------------------------')
             self.logger.info(f'Round: {n + 1}')
-            with concurrent.futures.ThreadPoolExecutor(max_workers=self.n_jobs) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
                 task_index = n
                 futures = []
                 round_start_time = now()
                 self.logger.info('Scheduling calls...')
-                for master, student in pairs:
+                pairs_in_round = all_pairs if n_random_pairs is None else random.sample(all_pairs, n_random_pairs)
+                for master, student in pairs_in_round:
                     task = tasks[task_index]
                     feature = executor.submit(lambda args: self.__dispatch_clash(*args),
                                               (task, student, master, self.competition_templates))
@@ -65,7 +76,7 @@ class Arena:
                 self.logger.info(f'Round done. Time: {now()-round_start_time:.1f} sec')
                 executor.shutdown()
 
-        self.competition_scores.dump(f'./results/{self.competition_id}_scores.pkl')
+        self.competition_scores.dump(f'./workdir/{self.competition_id}_scores.pkl')
 
         total_time = now() - start_time
 
@@ -77,10 +88,10 @@ class Arena:
         try:
             answer = self.invoke_chat('Answer', chat=student,
                                       template=template.get_question_template(),
-                                      var_dict={'task': task}, log_result=False)
+                                      var_dict={'task': task}, log_result=True)
             scores_json = self.invoke_chat('Scores', chat=master,
                                            template=template.get_answer_evaluation(),
-                                           var_dict={'task': task, 'answer': answer}, log_result=False)
+                                           var_dict={'task': task, 'answer': answer}, log_result=True)
             scores = parse_score(scores_json)
             master_index = self.model_name_to_index[get_model_name(master)]
             student_index = self.model_name_to_index[get_model_name(student)]
@@ -144,22 +155,22 @@ class Arena:
         time = now() - st
         result = response.content
         if log_result:
-            Arena.logger.debug(f'{name}: {wrap(result)}\nTime: {time:.1f} sec')
+            Arena.logger.debug(f'{name}:\n{wrap(result)}\nTime: {time:.1f} sec')
         return result
 
     @staticmethod
     @retry(stop=stop_after_attempt(20), wait=wait_exponential(min=1, max=32),
-           retry=retry_if_exception_type(RateLimitException))
+           retry=retry_if_exception_type(RetryRequestException))
     def __invoke_with_retry(chain, dicts):
         try:
             response = chain.invoke(dicts)
             return response
         except BaseException as ex:
             message = str(ex)
-            if 'Error code: 429' in message:
+            if ('Error code: 429' in message) or ('rate_limit_error' in message):
                 Logger.debug(f'Rate limit error: {message}')
-                raise RateLimitException()
-            if 'rate_limit_error' in message:
-                Logger.debug(f'Rate limit error: {message}')
-                raise RateLimitException()
+                raise RetryRequestException()
+            if 'Error code: 503' in message:
+                Logger.debug(f'Service unavailable: {message}')
+                raise RetryRequestException()
             Logger.error(message)

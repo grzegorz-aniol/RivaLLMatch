@@ -1,5 +1,6 @@
 .idea
 .venv
-
+workdir/*
+results/*.pkl
 .env
 fivallmatch.log

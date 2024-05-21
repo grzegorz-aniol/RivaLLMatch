@@ -11,7 +11,7 @@ class LoggerWrapper:
         self.console_handler.setFormatter(logging.Formatter('%(message)s'))
         self.file_handler = logging.FileHandler(log_file_name)
         self.file_handler.setLevel(logging.DEBUG)
-        self.file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+        self.file_handler.setFormatter(logging.Formatter('%(asctime)s [%(threadName)s] %(message)s'))
         self.logger.addHandler(self.console_handler)
         self.logger.addHandler(self.file_handler)
 
