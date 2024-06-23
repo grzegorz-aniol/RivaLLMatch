@@ -2,10 +2,10 @@ from typing import List
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from contests.competition_templates import CompetitionTemplates
+from contests.competition_template import CompetitionTemplate
 
 
-class TaskSolvingTemplates(CompetitionTemplates):
+class ProblemSolvingTemplate(CompetitionTemplate):
     """
         Set of prompt templates for problem-solving competition
     """
@@ -45,20 +45,20 @@ class TaskSolvingTemplates(CompetitionTemplates):
         """)
     ])
 
-    def get_templates_set_id(self) -> str:
+    def get_template_id(self) -> str:
         return 'problem_solving'
 
-    def get_templates_set_name(self) -> str:
+    def get_template_name(self) -> str:
         return 'Problem Solving'
 
     def get_metric_keys(self) -> List[str]:
         return ['accuracy', 'clarity', 'depth', 'reasoning']
 
     def get_task_selection_template(self) -> ChatPromptTemplate:
-        return TaskSolvingTemplates.task_selection_template
+        return ProblemSolvingTemplate.task_selection_template
 
     def get_question_template(self) -> ChatPromptTemplate:
-        return TaskSolvingTemplates.problem_question_template
+        return ProblemSolvingTemplate.problem_question_template
 
     def get_answer_evaluation(self) -> ChatPromptTemplate:
-        return TaskSolvingTemplates.answer_evaluation_template
+        return ProblemSolvingTemplate.answer_evaluation_template

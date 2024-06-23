@@ -1,9 +1,11 @@
-from langchain_core.prompts import ChatPromptTemplate
 from typing import List
 
-from contests.competition_templates import CompetitionTemplates
+from langchain_core.prompts import ChatPromptTemplate
 
-class CreativeWritingTemplates(CompetitionTemplates):
+from contests.competition_template import CompetitionTemplate
+
+
+class CreativeWritingTemplate(CompetitionTemplate):
     """
         Set of prompt templates for creative writing competition
     """
@@ -42,20 +44,20 @@ class CreativeWritingTemplates(CompetitionTemplates):
         """)
     ])
 
-    def get_templates_set_id(self) -> str:
+    def get_template_id(self) -> str:
         return 'creative_writing'
 
-    def get_templates_set_name(self) -> str:
+    def get_template_name(self) -> str:
         return 'Creative Writing'
 
     def get_metric_keys(self) -> List[str]:
         return ['creativity', 'depth', 'flow']
 
     def get_task_selection_template(self) -> ChatPromptTemplate:
-        return CreativeWritingTemplates.task_selection_template
+        return CreativeWritingTemplate.task_selection_template
 
     def get_question_template(self) -> ChatPromptTemplate:
-        return CreativeWritingTemplates.problem_question_template
+        return CreativeWritingTemplate.problem_question_template
 
     def get_answer_evaluation(self) -> ChatPromptTemplate:
-        return CreativeWritingTemplates.answer_evaluation_template
+        return CreativeWritingTemplate.answer_evaluation_template

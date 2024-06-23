@@ -1,15 +1,16 @@
 from abc import abstractmethod
 from typing import List
+
 from langchain_core.prompts import ChatPromptTemplate
 
 
-class CompetitionTemplates:
+class CompetitionTemplate:
     @abstractmethod
-    def get_templates_set_id(self) -> str:
+    def get_template_id(self) -> str:
         pass
 
     @abstractmethod
-    def get_templates_set_name(self) -> str:
+    def get_template_name(self) -> str:
         pass
 
     @abstractmethod
