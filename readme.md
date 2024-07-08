@@ -181,4 +181,4 @@ necessitating major societal and policy changes.
 
 
 All detailed metrics can be found on the other page:
-* [Debate and persuasion experiment details](./results/20240707_debate/debate_details)
+* [Debate and persuasion experiment details](./results/20240707_debate/debate_details.md)
