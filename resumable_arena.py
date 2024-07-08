@@ -48,20 +48,25 @@ class ResumableArena:
         return self.competition_scores
 
     def run_duels(self, n_jobs, start_time):
-        n_duels = self.duels_queue.queue.qsize()
-        self.logger.info(f'Number of duels in the queue: {n_duels}')
         self.logger.info('Starting duels')
         try:
             self.duels_queue.queue.prune(include_failed=False)
         except sqlite3.OperationalError:
             pass
+        self.duels_queue.retry_failed()
+        self.duels_queue.retry_locked()
         futures = []
+        last_update_ts = 0.0
         with concurrent.futures.ThreadPoolExecutor(max_workers=n_jobs) as executor:
             all_processed = False
             while not all_processed:
+                if time.time() - last_update_ts > 5.0:
+                    last_update_ts = time.time()
+                    n_duels_to_done = self.duels_queue.queue.qsize()
+                    self.logger.info(f'Number of pending duels in the queue: {n_duels_to_done}')
                 message = self.duels_queue.get()
                 all_processed = (message is None)
-                if not all_processed:
+                if message:
                     feature = executor.submit(lambda arg: self.__dispatch_duel(arg), message)
                     futures.append(feature)
         self.logger.info('Waiting for results...')
@@ -102,7 +107,7 @@ class ResumableArena:
             self.duels_queue.mark_done(message)
 
         except BaseException as ex:
-            self.logger.error(ex)
+            self.logger.error(f'Error: {ex}')
             self.duels_queue.mark_failed(message)
             return None
 

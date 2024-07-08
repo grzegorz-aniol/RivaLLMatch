@@ -8,7 +8,7 @@ The competition takes place in one of the following areas:
 
 * problem-solving
 * creative writing
-* debate and persuasion (tbd)
+* debate and persuasion
 
 ## How it works
 
@@ -26,7 +26,7 @@ Models select the problems or tasks they will solve in each round. Models are qu
 
 In each round, models are paired for competition. Each pair consists of a 'master' (who evaluates) and a 'student' (who provides the answer). For example, if n_llms=3, there are 6 possible pairs.
 
-### Master-student clash
+### Master-student duel
 The 'student' model answers a task from the round, and the 'master' model evaluates the response based on the several criteria.
 
 For problem-solving we consider following scores: 
@@ -40,13 +40,22 @@ For creative writing we use such scores:
 * emotional depth
 * narrative flow
 
-### Next round
+For debate and persuasion task we evaluate following criteria:
+* clarity and structure
+* evidence and support
+* persuasiveness
+* addressing counterarguments
 
-After completing a round, the next task is selected, and another round begins.
+### Asynchronous and resumable workflow
+
+The application schedule execution of every duel in a queue. A pool of asynchronous executors perform each duel request
+and store results in database. 
 
 ### Results compilation
 
-RivaLLMatch collects the results and generates charts for each metric and the overall average for each model at the end of the session. Additionally, heat maps are created to visualize how models evaluated each other.
+When all results are completed, RivaLLMatch collects them and generates charts for each metric 
+and the overall average for each model at the end of the session. 
+Additionally, heat maps are created to visualize how models evaluated each other.
 
 ## Problem-solving results
 
@@ -140,3 +149,36 @@ struggles to find their place and make a name for themselves in the competitive 
 ![](./results/creative_writing_flow.png)
 ![](./results/creative_writing_flow_heatmap.png)
 
+## Debate and persuasion task
+
+### Example of tasks
+
+**gpt-4o** 
+The implementation of universal basic income (UBI) will reduce poverty and economic inequality, while simultaneously
+promoting entrepreneurship and societal well-being, making it a necessary policy for modern economies.
+
+**claude-3-opus-20240229**
+The death penalty should be abolished because it is a cruel, inhumane, and irreversible punishment that has no place in
+a civilized society.
+
+**llama3-8b-8192**
+The privatisation of essential public services, such as healthcare and education, has a net positive impact on societal
+efficiency, economic growth, and citizen welfare.
+
+**mixtral-8x7b-32768**
+Artificial Intelligence (AI) and automation will lead to a net loss of jobs, exacerbating economic inequality and
+necessitating major societal and policy changes.
+
+### Overall scores
+
+![](./results/20240707_debate/debate_persuasion_average_student.png)
+
+
+![](./results/20240707_debate/debate_persuasion_average_master.png)
+
+
+![](./results/20240707_debate/debate_persuasion_average_heatmap.png)
+
+
+All detailed metrics can be found on the other page:
+* [Debate and persuasion experiment details](./results/20240707_debate/debate_details)

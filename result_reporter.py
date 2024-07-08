@@ -20,19 +20,31 @@ class ChartReporter:
         all_results = self.scores.get_all_avg_results()
         metric_keys = all_results.keys()
         student_scores = self.scores.get_student_avg_score()
+        master_scores = self.scores.get_master_avg_score()
         n_models = len(self.model_names)
         n_metrics = len(metric_keys)
-        overall_scores = np.zeros((n_metrics, n_models))
+        student_overall_scores = np.zeros((n_metrics, n_models))
+        master_overall_scores = np.zeros((n_metrics, n_models))
         for i, key in enumerate(metric_keys):
             scores = [score[key] for score in student_scores]
-            overall_scores[i] = scores
+            student_overall_scores[i] = scores
+            master_overall_scores[i] = [score[key] for score in master_scores]
             self.generate_overall_results(f'{self.competition_id} / {key}', key,
                                           f'workdir/{self.competition_id}_{key}.png', scores)
             self.generate_heatmap_chart(f'{self.competition_id} / {key} (heatmap)',
                                         f'workdir/{self.competition_id}_{key}_heatmap.png', all_results[key])
-        average_scores = overall_scores.mean(axis=0)
-        self.generate_overall_results(f'{self.competition_id} / average result', 'average',
-                                      f'workdir/{self.competition_id}_average.png', average_scores)
+        student_average_scores = student_overall_scores.mean(axis=0)
+        self.generate_overall_results(f'{self.competition_id} / average student result (received)', 'average',
+                                      f'workdir/{self.competition_id}_average_student.png', student_average_scores)
+
+        teacher_average_scores = master_overall_scores.mean(axis=0)
+        self.generate_overall_results(f'{self.competition_id} / average master score (given)', 'average',
+                                      f'workdir/{self.competition_id}_average_master.png', teacher_average_scores)
+
+        x = np.array([all_results[k] for k in all_results])
+        total_heatmap = np.mean(x, axis=0)
+        self.generate_heatmap_chart(f'{self.competition_id} / overall heatmap',
+                                    f'workdir/{self.competition_id}_average_heatmap.png', total_heatmap)
 
     def generate_heatmap_chart(self, title, file_name, matrix):
         plt.figure(figsize=(self.fig_width, 6))
@@ -58,7 +70,8 @@ class ChartReporter:
         for index, value in enumerate(values):
             bar_plot.text(index, value + 0.01, f'{value:.3f}', color='black', ha="center")
         plt.subplots_adjust(left=0.2, bottom=0.2)
-        bar_plot.set_ylim(bottom=min(0.5, min(values)))
+        y_min = 0.5 if min(values) > 0.5 else 0.0
+        bar_plot.set_ylim(bottom=y_min)
 
         plt.tight_layout()
         plt.savefig(file_name)

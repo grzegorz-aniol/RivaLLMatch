@@ -3,13 +3,16 @@ from typing import Optional
 from litequeue import LiteQueue
 
 from messages.duel_request_message import DuelRequestMessage
+from logger import Logger
 
 
 class DuelsQueue:
+    logger = Logger()
 
     def __init__(self, db_path):
         self.db_path = db_path
         self.queue = LiteQueue(filename_or_conn=db_path, memory=False)
+        self.cnt_retried = 0
 
     def __del__(self):
         self.prune(include_failed=False)
@@ -26,7 +29,13 @@ class DuelsQueue:
     def get(self) -> Optional[DuelRequestMessage]:
         task = self.queue.pop()
         if not task:
-            return None
+            if self.cnt_retried > 1:
+                return None
+            self.cnt_retried += 1
+            self.retry_failed()
+            task = self.queue.pop()
+            if not task:
+                return None
         duel_request = DuelRequestMessage.parse_raw(task.data)
         duel_request.message_id = task.message_id
         return duel_request
@@ -38,3 +47,23 @@ class DuelsQueue:
     def mark_done(self, duel_request):
         message_id = duel_request.message_id
         self.queue.done(message_id)
+
+    def retry_failed(self):
+        failed_messages = list(self.queue.list_failed())
+        n_failed = len(failed_messages)
+        if n_failed > 0:
+            self.logger.info(f'Found {n_failed} failed messages. Retrying all of them...')
+            for message in failed_messages:
+                self.queue.retry(message.message_id)
+            return True
+        return False
+
+    def retry_locked(self):
+        locked_messages = list(self.queue.list_locked(0))
+        n_locked = len(locked_messages)
+        if n_locked > 0:
+            self.logger.info(f'Found {n_locked} locked messages. Retrying all of them...')
+            for message in locked_messages:
+                self.queue.retry(message.message_id)
+            return True
+        return False

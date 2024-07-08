@@ -10,3 +10,6 @@ class Experiment(Base):
     initialized = Column(Boolean, nullable=False, default=False)
     template_id = Column(String, nullable=False)
     model_names = Column(JSON, nullable=False)
+    n_rounds = Column(Integer, nullable=False)
+    n_pairs_in_round = Column(Integer, nullable=False)
+    n_duels =  Column(Integer, nullable=False)

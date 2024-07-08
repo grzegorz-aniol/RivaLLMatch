@@ -8,7 +8,7 @@ from entities.experiment import Experiment
 from job_queue import DuelsQueue
 from logger import Logger
 from messages.duel_request_message import DuelRequestMessage
-from models import build_model
+from models import build_model, get_model_name
 from resumable_arena import ResumableArena
 from storage import Storage
 
@@ -18,6 +18,7 @@ class ArenaBuilder:
 
     def __init__(self, model_names, template_id, storage: Storage, duels_queue: DuelsQueue):
         self.model_names = model_names
+        self.original_model_names = model_names.copy()
         self.template_id = template_id
         self.competition_template = build_competition_template(template_id)
         self.storage = storage
@@ -41,7 +42,7 @@ class ArenaBuilder:
                             f'but the application is executed with "{self.template_id}". '
                             f'You need to finish previous experiment first.')
         if self.duels_queue.queue.qsize() == 0:
-            raise Exception('Processing queue for the experiment is empty. It seems the experiment is completed.')
+            self.logger.info('WARN: Processing queue for the experiment is empty. It seems the experiment is completed.')
         self.llms = [build_model(model) for model in experiment.model_names]
 
     def __initialize_new_experiment(self, n_rounds=1, n_random_pairs=None):
@@ -51,23 +52,30 @@ class ArenaBuilder:
         self.logger.info('Initializing a new experiment.')
         if experiment:
             self.storage.delete_experiment()
-        experiment = Experiment()
-        experiment.template_id = self.template_id
-        experiment.model_names = self.model_names
-        experiment.created_ts = time.time_ns() // 1_000
-        self.storage.save_experiment(experiment)
 
         self.llms = [build_model(model) for model in self.model_names]
+        # re-create model names with formal names used in created objects
+        self.model_names = [get_model_name(model) for model in self.llms]
 
         n_llms = len(self.model_names)
         if n_llms < 2:
             raise Exception('Too small number of LLMs. At least two should be provided to start a competition.')
         all_pairs = list(permutations(self.model_names, 2))
         n_pairs_in_round = n_random_pairs if n_random_pairs else len(all_pairs)
+        n_duels = n_rounds * n_pairs_in_round
+
+        experiment = Experiment()
+        experiment.template_id = self.template_id
+        experiment.model_names = self.original_model_names
+        experiment.created_ts = time.time_ns() // 1_000
+        experiment.n_rounds = n_rounds
+        experiment.n_pairs_in_round = n_pairs_in_round
+        experiment.n_duels = n_duels
+        self.storage.save_experiment(experiment)
 
         self.logger.info(f'Starting competition: {self.competition_template.get_template_name()}')
         self.logger.info(f'Number of rounds: {n_rounds}')
-        self.logger.info(f'Number of duels: {n_rounds * n_pairs_in_round} ({n_pairs_in_round} in each round)')
+        self.logger.info(f'Number of duels: {n_duels} ({n_pairs_in_round} in each round)')
         self.logger.info(f'Models under evaluation: {self.model_names}')
         self.logger.info('')
 
@@ -85,14 +93,14 @@ class ArenaBuilder:
         tasks = []
         for n in range(n_tasks):
             model_index = n % n_llms
-            model_name = self.model_names[model_index]
+            original_model_name = self.original_model_names[model_index]
             llm = self.llms[model_index]
-            self.logger.info(f'Querying model: {model_name}')
+            self.logger.info(f'Querying model: {original_model_name}')
             task = ResumableArena.invoke_chat(f'Task #{n + 1}', chat=llm,
                                               template=self.competition_template.get_task_selection_template())
             competition_task = CompetitionTask()
             competition_task.task_description = task
-            competition_task.created_by_model = model_name
+            competition_task.created_by_model = original_model_name
             self.storage.save_task(competition_task)
 
             tasks.append(task)
@@ -102,8 +110,7 @@ class ArenaBuilder:
     def __build_duel_requests(self, tasks, all_pairs, n_random_pairs, n_rounds=1):
         self.logger.info('Scheduling all duels...')
         for n in range(n_rounds):
-            self.logger.info('-------------------------------------------------------------------------------')
-            self.logger.info(f'Round: {n + 1}')
+            self.logger.info(f'.. round {n + 1}')
             task_index = n
             pairs_in_round = all_pairs if n_random_pairs is None else random.sample(all_pairs, n_random_pairs)
             for master_model, student_model in pairs_in_round:
