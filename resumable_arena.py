@@ -88,6 +88,7 @@ class ResumableArena:
             task = message.task
             task_num = message.task_num
 
+            self.logger.info('-----------------------------------------------------------------------------')
             self.logger.info(f'Duel between {get_model_name(master)} (master) '
                              f'and {get_model_name(student)} (student) on task #{task_num}')
 

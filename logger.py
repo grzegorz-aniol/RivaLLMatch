@@ -3,17 +3,21 @@ import logging
 
 class LoggerWrapper:
 
-    def __init__(self, log_file_name='rivallmatch.log'):
+    log_file_name='rivallmatch.log'
+
+    def __init__(self):
         self.logger = logging.getLogger('RivaLLMatch')
         self.logger.setLevel(logging.DEBUG)
-        self.console_handler = logging.StreamHandler()
-        self.console_handler.setLevel(logging.INFO)
-        self.console_handler.setFormatter(logging.Formatter('%(message)s'))
-        self.file_handler = logging.FileHandler(log_file_name)
-        self.file_handler.setLevel(logging.DEBUG)
-        self.file_handler.setFormatter(logging.Formatter('%(asctime)s [%(threadName)s] %(message)s'))
-        self.logger.addHandler(self.console_handler)
-        self.logger.addHandler(self.file_handler)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(logging.Formatter('%(message)s'))
+        self.logger.addHandler(console_handler)
+
+    def append_file_logger(self, log_file_name):
+        file_handler = logging.FileHandler(log_file_name)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter('%(asctime)s [%(threadName)s] %(message)s'))
+        self.logger.addHandler(file_handler)
 
 
 class Logger:

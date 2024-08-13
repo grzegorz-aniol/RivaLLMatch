@@ -8,6 +8,7 @@ from contests.templates_factory import get_all_templates
 from job_queue import DuelsQueue
 from result_reporter import ChartReporter
 from storage import Storage
+from logger import Logger
 
 
 class RivaLLMatch:
@@ -38,6 +39,7 @@ class RivaLLMatch:
         parser.add_argument('--models', type=lambda s: s.split(','),
                             help="List of comma separated LLM model names (required for new experiment).")
         self.args = parser.parse_args()
+        Logger.logger.append_file_logger(f"{self.args.experiment_id}.log")
         self.db_path = f"./{self.args.experiment_id}.db"
         self.storage = Storage(db_path=self.db_path)
         self.duels_queue = DuelsQueue(db_path=self.db_path)
