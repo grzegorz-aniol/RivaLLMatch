@@ -11,7 +11,7 @@ class DuelsQueue:
 
     def __init__(self, db_path):
         self.db_path = db_path
-        self.queue = LiteQueue(filename_or_conn=db_path, memory=False)
+        self.queue = LiteQueue(filename_or_conn=db_path, memory=False, queue_name="duels_queue")
         self.cnt_retried = 0
 
     def __del__(self):

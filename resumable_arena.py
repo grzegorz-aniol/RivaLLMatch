@@ -38,7 +38,7 @@ class ResumableArena:
     def run(self, n_jobs=1) -> CompetitionScores:
         start_time = now()
 
-        self.run_duels(n_jobs, start_time)
+        self.run_duels(n_jobs)
         self.generate_results()
 
         total_time = now() - start_time
@@ -47,7 +47,7 @@ class ResumableArena:
         self.show_results()
         return self.competition_scores
 
-    def run_duels(self, n_jobs, start_time):
+    def run_duels(self, n_jobs):
         self.logger.info('Starting duels')
         try:
             self.duels_queue.queue.prune(include_failed=False)
@@ -72,7 +72,6 @@ class ResumableArena:
         self.logger.info('Waiting for results...')
         concurrent.futures.wait(futures)
         self.duels_queue.prune(include_failed=False)
-        self.logger.info(f'Done. Time: {now() - start_time:.1f} sec')
         executor.shutdown()
 
     def generate_results(self):
@@ -87,6 +86,11 @@ class ResumableArena:
             student = self.model_name_to_obj[message.student_model]
             master = self.model_name_to_obj[message.master_model]
             task = message.task
+            task_num = message.task_num
+
+            self.logger.info(f'Duel between {get_model_name(master)} (master) '
+                             f'and {get_model_name(student)} (student) on task #{task_num}')
+
             answer = self.invoke_chat('Answer', chat=student,
                                       template=self.competition_template.get_question_template(),
                                       var_dict={'task': task}, log_result=True)
@@ -95,8 +99,7 @@ class ResumableArena:
                                            var_dict={'task': task, 'answer': answer}, log_result=True)
             scores = parse_score(scores_json)
 
-            self.logger.info(f'Duel between {get_model_name(master)} (master) '
-                             f'and {get_model_name(student)} (student)\n    -> student scores: {scores}')
+            self.logger.info(f'Model {get_model_name(student)} scores on task #{task_num}: {scores}')
 
             duel_result = DuelResult()
             duel_result.created_ts = time.time_ns() // 1_000

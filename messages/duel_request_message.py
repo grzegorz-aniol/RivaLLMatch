@@ -8,4 +8,5 @@ class DuelRequestMessage(BaseModel):
     student_model: str
     template_id: str
     task: str
+    task_num: int
     message_id: Optional[int] = None
