@@ -3,7 +3,7 @@ from typing import Optional
 from litequeue import LiteQueue
 
 from messages.duel_request_message import DuelRequestMessage
-from logger import Logger
+from workdir.logger import Logger
 
 
 class DuelsQueue:

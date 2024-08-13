@@ -4,7 +4,7 @@ matplotlib.use('Agg')
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from score import CompetitionScores
+from arena.score import CompetitionScores
 
 
 class ChartReporter:

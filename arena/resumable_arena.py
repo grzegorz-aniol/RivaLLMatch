@@ -7,13 +7,13 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 from contests.competition_template import CompetitionTemplate
 from entities.duel_result import DuelResult
-from job_queue import DuelsQueue
-from logger import Logger
+from arena.job_queue import DuelsQueue
+from workdir.logger import Logger
 from messages.duel_request_message import DuelRequestMessage
-from models import get_model_name
-from score import parse_score, CompetitionScores
-from storage import Storage
-from utils import now, wrap
+from arena.models import get_model_name
+from arena.score import parse_score, CompetitionScores
+from arena.storage import Storage
+from workdir.utils import now, wrap
 
 
 class RetryRequestException(Exception):

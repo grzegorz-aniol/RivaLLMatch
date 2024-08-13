@@ -6,12 +6,12 @@ from typing import List
 from contests.templates_factory import build_competition_template
 from entities.competition_task import CompetitionTask
 from entities.experiment import Experiment
-from job_queue import DuelsQueue
-from logger import Logger
+from arena.job_queue import DuelsQueue
+from workdir.logger import Logger
 from messages.duel_request_message import DuelRequestMessage
-from models import build_model, get_model_name
-from resumable_arena import ResumableArena
-from storage import Storage
+from arena.models import build_model, get_model_name
+from arena.resumable_arena import ResumableArena
+from arena.storage import Storage
 
 
 class ArenaBuilder:

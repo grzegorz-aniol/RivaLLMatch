@@ -3,12 +3,12 @@ dotenv.load_dotenv()
 
 import argparse
 
-from arena_builder import ArenaBuilder
+from arena.arena_builder import ArenaBuilder
 from contests.templates_factory import get_all_templates
-from job_queue import DuelsQueue
-from result_reporter import ChartReporter
-from storage import Storage
-from logger import Logger
+from arena.job_queue import DuelsQueue
+from arena.result_reporter import ChartReporter
+from arena.storage import Storage
+from workdir.logger import Logger
 
 
 class RivaLLMatch:

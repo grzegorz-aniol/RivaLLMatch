@@ -4,7 +4,7 @@ from typing import List, Dict
 
 import numpy as np
 
-from logger import Logger
+from workdir.logger import Logger
 
 
 class Score:
