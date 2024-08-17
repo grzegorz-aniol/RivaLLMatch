@@ -4,7 +4,7 @@ from typing import List, Dict
 
 import numpy as np
 
-from workdir.logger import Logger
+from utils.logger import Logger
 
 
 class Score:
@@ -37,13 +37,13 @@ class CompetitionScores:
         avg_score = {key: value/count for key, value in self.metrics.items()}
         return avg_score
 
-    def get_student_avg_score(self):
-        return self.__get_avg_score(axis=0)
+    def get_student_avg_score_details(self):
+        return self.__get_avg_score_details(axis=0)
 
-    def get_master_avg_score(self):
-        return self.__get_avg_score(axis=1)
+    def get_master_avg_score_details(self):
+        return self.__get_avg_score_details(axis=1)
 
-    def __get_avg_score(self, axis):
+    def __get_avg_score_details(self, axis):
         count = self.count.sum(axis=axis)
         count[count == 0.0] = 1.0
         # mean of every metric type for each model
@@ -52,7 +52,7 @@ class CompetitionScores:
         for model in range(self.n_models):
             avg_scores_for_model = {key: value[model] for key, value in avg_metrics_by_type_and_model.items()}
             avg_score.append(avg_scores_for_model)
-        return avg_score
+        return (avg_score, count)
 
 
 def clean_json_result(json_like):

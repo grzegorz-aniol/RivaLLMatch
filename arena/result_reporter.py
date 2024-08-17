@@ -19,8 +19,8 @@ class ChartReporter:
     def generate_reports(self):
         all_results = self.scores.get_all_avg_results()
         metric_keys = all_results.keys()
-        student_scores = self.scores.get_student_avg_score()
-        master_scores = self.scores.get_master_avg_score()
+        student_scores, _ = self.scores.get_student_avg_score_details()
+        master_scores, _ = self.scores.get_master_avg_score_details()
         n_models = len(self.model_names)
         n_metrics = len(metric_keys)
         student_overall_scores = np.zeros((n_metrics, n_models))

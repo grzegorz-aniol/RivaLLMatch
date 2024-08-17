@@ -8,12 +8,12 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from contests.competition_template import CompetitionTemplate
 from entities.duel_result import DuelResult
 from arena.job_queue import DuelsQueue
-from workdir.logger import Logger
+from utils.logger import Logger
 from messages.duel_request_message import DuelRequestMessage
 from arena.models import get_model_name
 from arena.score import parse_score, CompetitionScores
 from arena.storage import Storage
-from workdir.utils import now, wrap
+from utils.utils import now, wrap
 
 
 class RetryRequestException(Exception):
@@ -104,6 +104,7 @@ class ResumableArena:
 
             duel_result = DuelResult()
             duel_result.created_ts = time.time_ns() // 1_000
+            duel_result.task_num = task_num
             duel_result.master_model = get_model_name(master)
             duel_result.student_model = get_model_name(student)
             duel_result.scores_json = scores
@@ -119,23 +120,25 @@ class ResumableArena:
         n_llms = len(self.llms)
         self.logger.info('Final results:')
         self.logger.info(' > student scores (received):')
-        student_avg_scores = self.competition_scores.get_student_avg_score()
+        student_avg_scores, student_scores_cnt = self.competition_scores.get_student_avg_score_details()
         for n in range(n_llms):
             llm = self.llms[n]
             model_name = get_model_name(llm)
             avg_scores = student_avg_scores[n]
+            cnt_scores = student_scores_cnt[n]
             if avg_scores:
-                self.logger.info(f"   > Model: {model_name} average scores: {self.__score_to_str(avg_scores)}")
+                self.logger.info(f"   > Model: {model_name} average scores: {self.__score_to_str(avg_scores)}, cnt: {cnt_scores}")
             else:
                 self.logger.info(f"Model: {model_name} - no score")
         self.logger.info(' > master scores (given):')
-        master_avg_scores = self.competition_scores.get_master_avg_score()
+        master_avg_scores, master_scores_cnt = self.competition_scores.get_master_avg_score_details()
         for n in range(n_llms):
             llm = self.llms[n]
             model_name = get_model_name(llm)
             avg_scores = master_avg_scores[n]
+            cnt_scores = master_scores_cnt[n]
             if avg_scores:
-                self.logger.info(f"   > Model: {model_name} average scores: {self.__score_to_str(avg_scores)}")
+                self.logger.info(f"   > Model: {model_name} average scores: {self.__score_to_str(avg_scores)}, cnt: {cnt_scores}")
             else:
                 self.logger.info(f"Model: {model_name} - no score")
 

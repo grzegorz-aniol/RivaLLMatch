@@ -8,4 +8,3 @@ class CompetitionTask(Base):
     id = Column(Integer, primary_key=True)
     task_description = Column(String, nullable=False)
     created_by_model = Column(String, nullable=False)
-    # experiment = relationship(Experiment)

@@ -3,7 +3,7 @@ from typing import Optional
 from litequeue import LiteQueue
 
 from messages.duel_request_message import DuelRequestMessage
-from workdir.logger import Logger
+from utils.logger import Logger
 
 
 class DuelsQueue:
@@ -36,7 +36,7 @@ class DuelsQueue:
             task = self.queue.pop()
             if not task:
                 return None
-        duel_request = DuelRequestMessage.parse_raw(task.data)
+        duel_request = DuelRequestMessage.model_validate_json(task.data)
         duel_request.message_id = task.message_id
         return duel_request
 

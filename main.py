@@ -8,23 +8,23 @@ from contests.templates_factory import get_all_templates
 from arena.job_queue import DuelsQueue
 from arena.result_reporter import ChartReporter
 from arena.storage import Storage
-from workdir.logger import Logger
+from utils.logger import Logger
 
 
 class RivaLLMatch:
     model_names = [
-        # 'gpt-4o-2024-08-06',
-        # 'gpt-4o-mini',
-        # 'gpt-3.5-turbo-0125',
-        # 'claude-3-opus-20240229',
-        # 'claude-3-5-sonnet-20240620',
+        'gpt-4o-2024-08-06',
+        'gpt-4o-mini',
+        'gpt-3.5-turbo-0125',
+        'claude-3-opus-20240229',
+        'claude-3-5-sonnet-20240620',
         'llama3-8b-8192',
         'llama3-70b-8192',
         # 'gemma-7b-it',
-        # 'mixtral-8x7b-32768',
-        # 'open-mixtral-8x22b-2404',
-        # 'gemini-1.0-pro-latest',
-        # 'gemini-1.5-pro-latest',
+        'mixtral-8x7b-32768',
+        'open-mixtral-8x22b-2404',
+        'gemini-1.0-pro-latest',
+        'gemini-1.5-pro-latest',
     ]
 
     def __init__(self):
