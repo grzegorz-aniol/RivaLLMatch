@@ -6,45 +6,38 @@
 
 The competition takes place in one of the following areas:
 
-* problem-solving
-* creative writing
-* debate and persuasion
+* Problem-solving
+* Creative writing
+* Debate and persuasion
 
-## How it works
+## Arena Rules
 
-Evaluation within the area is carried out as follows.
+A predetermined number of models (n_llms) participate in the competition.
 
-### Round setup 
+The Arena runs duels in rounds (by default, n_rounds=4).
 
-The number of rounds (n_rounds) in which all models (n_llms) participate is predetermined
+In each round, every pair of models competes. Each pair consists of a 'student,' who provides an answer to a randomly selected task, and a 'master,' who evaluates the answer and assigns scores. For instance, with n_llms=3, there are 6 possible pairs in a round.
 
-### Tasks selection
+### Answer Evaluation
 
-Models select the problems or tasks they will solve in each round. Models are queried sequentially until the task pool is filled. Each model is queried an equal number of times only if the number of rounds matches the number of models.
+The 'master' model evaluates responses based on several criteria, depending on the competition type.
 
-### Task solving in rounds
+For the problem-solving competition, the following scores are assessed:
+* Accuracy
+* Clarity
+* Depth of explanation
+* Reasoning
 
-In each round, models are paired for competition. Each pair consists of a 'master' (who evaluates) and a 'student' (who provides the answer). For example, if n_llms=3, there are 6 possible pairs.
+For the creative writing task, the evaluation includes:
+* Creativity
+* Emotional depth
+* Narrative flow
 
-### Master-student duel
-The 'student' model answers a task from the round, and the 'master' model evaluates the response based on the several criteria.
-
-For problem-solving we consider following scores: 
-* accuracy
-* clarity
-* depth of explanation
-* reasoning
-
-For creative writing we use such scores:
-* creativity
-* emotional depth
-* narrative flow
-
-For debate and persuasion task we evaluate following criteria:
-* clarity and structure
-* evidence and support
-* persuasiveness
-* addressing counterarguments
+For the debate and persuasion task, the criteria are:
+* Clarity and structure
+* Evidence and support
+* Persuasiveness
+* Addressing counterarguments
 
 ### Asynchronous and resumable workflow
 
@@ -58,6 +51,8 @@ and the overall average for each model at the end of the session.
 Additionally, heat maps are created to visualize how models evaluated each other.
 
 ## Problem-solving results
+
+Results from the experiment completed on **2024-08-16**.
 
 ### Task examples
 
@@ -93,23 +88,15 @@ manager, Rachel, who is willing to join the company for a lower salary, but her 
 the new project.
 
 ### Overall scores
-![](./results/problem_solving_average.png)
 
-### Accuracy
-![](./results/problem_solving_accuracy.png)
-![](./results/problem_solving_accuracy_heatmap.png)
+![](./results/20240817_problem_solving/problem_solving_average_student.png)
 
-### Clarity
-![](./results/problem_solving_clarity.png)
-![](./results/problem_solving_clarity_heatmap.png)
+![](./results/20240817_problem_solving/problem_solving_average_master.png)
 
-### Depth of explanation
-![](./results/problem_solving_depth.png)
-![](./results/problem_solving_depth_heatmap.png)
+![](./results/20240817_problem_solving/problem_solving_average_heatmap.png)
 
-### Reasoning
-![](./results/problem_solving_reasoning.png)
-![](./results/problem_solving_reasoning_heatmap.png)
+All detailed metrics can be found on the other page:
+* [Problem solving experiment details](./results/20240817_problem_solving/problem_solving_details.md)
 
 
 ## Creative writing results
@@ -149,7 +136,9 @@ struggles to find their place and make a name for themselves in the competitive 
 ![](./results/creative_writing_flow.png)
 ![](./results/creative_writing_flow_heatmap.png)
 
-## Debate and persuasion task
+## Debate and persuasion task 
+
+Results from the experiment completed on **2024-07-07**.
 
 ### Example of tasks
 
